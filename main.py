@@ -13,7 +13,7 @@ def get_links(url):
     for tags in content.find_all('td', {"class": "link"}): # Get links but skip 'parent', '.', and '..'
         tag = tags.select('a')[0]
         title = tag.get('title')
-        if title is None or title == './' or title == '../':
+        if title is None or title == '.'or title == '..':
             continue
         
         link = url + tag.get('href')
@@ -30,7 +30,7 @@ def get_links(url):
 
 def download(link, title, folder):
     title_unicode = title.encode(encoding='utf-8') # Required due to some file names using non-ASCII characters
-    file_path = f'{folder}/{title_unicode}'
+    file_path = f'{folder}/{title}'
 
     if os.path.exists(file_path):
         print(f'{title_unicode} already exists, skipping')
