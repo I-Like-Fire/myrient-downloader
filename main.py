@@ -13,7 +13,7 @@ def get_links(url):
     for tags in content.find_all('td', {"class": "link"}): # Get links but skip 'parent', '.', and '..'
         tag = tags.select('a')[0]
         title = tag.get('title')
-        if title == 'Parent directory/' or title == './' or title == '../':
+        if title is None or title == './' or title == '../':
             continue
         
         link = url + tag.get('href')
