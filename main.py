@@ -40,7 +40,7 @@ def download(link, title, folder):
         total_size = int(response.headers.get("content-length", 0))
         block_size = 1024
 
-        print(f"Downloading {title} ({total_size})")
+        print(f"Downloading {title_unicode} ({total_size})")
 
         with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
             with open(file_path, "wb") as f:
