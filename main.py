@@ -42,11 +42,16 @@ def download(link, title, folder):
 
         print(f"Downloading {title_unicode} ({total_size})")
 
-        with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
-            with open(file_path, "wb") as f:
-                for data in response.iter_content(block_size):
-                    progress_bar.update(len(data))
-                    f.write(data)
+        try:
+            with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
+                with open(file_path, "wb") as f:
+                    for data in response.iter_content(block_size):
+                        progress_bar.update(len(data))
+                        f.write(data)
+        except:
+            with open('Errors.txt', 'a') as error_file:
+                error_file.write(f'{link}\n{file_path}\n')
+
 
         print(f"{title_unicode} finished downloading.\n")
 
