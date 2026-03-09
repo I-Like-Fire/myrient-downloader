@@ -1,32 +1,49 @@
 import requests
 import os
 import sys
+import json
 
-from tqdm import tqdm
+from math import ceil
 from bs4 import BeautifulSoup
 
-def get_links(url):
-    link_arr = []
+def get_links(url, directory):
+    link_data = {}
     web_page = requests.get(url=url)
     content = BeautifulSoup(web_page.text, 'html.parser')
 
-    for tags in content.find_all('td', {"class": "link"}): # Get links but skip 'parent', '.', and '..'
-        tag = tags.select('a')[0]
+    rows = content.find_all('tr')
+
+    for r in rows:
+        tag = r.select('a')[0]
         title = tag.get('title')
+        
         if title is None or title == '.'or title == '..':
             continue
         
         link = url + tag.get('href')
-        if link.endswith('/'): # Create subdirectories if found
-            if not os.path.exists(title):
-                os.mkdir(title)
-            os.chdir(title)
-            link_arr += get_links(link) # Recursive call for subdirectories
-            os.chdir('..')
+        file_size = r.find_all('td', {'class': 'size'})[0].get_text()
+
+        if link.endswith('/'):
+            link_data.append(get_links(url, directory + title))
         else:
-            link_arr.append((link, title, os.getcwd()))
+
+            if file_size.endswith('GiB'):
+                file_size = ((float(file_size[:-4]) * 1024) * 1024) * 1024
+            elif file_size.endswith('MiB'):
+                file_size = (float(file_size[:-4]) * 1024) * 1024
+            elif file_size.endswith('KiB'):
+                file_size = float(file_size[:-4]) * 1024
+            elif file_size.endswith('B'):
+                file_size = float(file_size[:-2])
+            
+            link_data[title] = {
+                'link': link,
+                'directory': directory,
+                'file_size': file_size,
+                'Status': 'Not downloaded'
+            }
     
-    return link_arr
+    return link_data
 
 def download(link, title, folder):
     title_unicode = title.encode(encoding='utf-8') # Required due to some file names using non-ASCII characters
@@ -61,12 +78,35 @@ if __name__ == '__main__':
         exit()
 
     url = sys.argv[1]
-    links = get_links(url)
-    progress = 0
 
-    for link in links:
-        download(link[0], link[1], link[2])
-        progress += 1
-        print(f'                 Progress: {progress}/{len(links)}')
+    if os.path.exists('links.json'):
+        print('Loading from file')
+        with open('links.json', 'r') as f:
+            links = json.load(f)       
+    else:
+        print('Getting links')
+        links = get_links(url, os.getcwd() + '/')
+        with open('links.json', 'w') as f:
+            json.dump(links, f, ensure_ascii=False, indent=4)
+        print('Links obtained')
+    
+    total_size = 0
+    for key in links:
+        total_size += links[key]['file_size']
+    
+    for i in ['B', 'KiB', 'MiB', 'GiB']:
+        integer = str(total_size).split('.')[0]
+        if len(integer) > 4 and not i == 'GiB':
+            total_size = total_size / 1024
+        else:
+            total_size = ceil(total_size * 100) / 100.0
+            total_size = f'{total_size} {i}'
+            break
+    print(total_size)
+
+    # for link in links:
+    #     download(link[0], link[1], link[2])
+    #     progress += 1
+    #     print(f'                 Progress: {progress}/{len(links)}')
 
     print("Done")
