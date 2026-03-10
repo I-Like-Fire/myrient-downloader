@@ -114,7 +114,6 @@ def main(url):
         elif user_input.lower() != 'n':
             print('Choices are Y or N.')
 
-    input('Press the any key')
     temp_dir.cleanup()
     print("Done")
 
