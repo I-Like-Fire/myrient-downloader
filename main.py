@@ -79,7 +79,7 @@ def download(item):
 
         print(f"{title_unicode} finished downloading.\n")
 
-def main(url)
+def main(url):
     if os.path.exists('links.json'):
         print('Loading from file')
         with open('links.json', 'r') as f:
